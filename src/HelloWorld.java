@@ -6,14 +6,22 @@ import javax.servlet.ServletException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class HelloWorld extends AbstractHandler {
-	Hashtable<String, BufferedImage> ht = new Hashtable<String, BufferedImage>();
+
+	private static int MAX_ENTRIES = 3;
+	LinkedHashMap<String, BufferedImage> lhm = new LinkedHashMap<String, BufferedImage>(MAX_ENTRIES + 1) {
+
+		protected boolean removeEldestEntry(Map.Entry eldest) {
+			return size() > MAX_ENTRIES;
+		}
+	};
 
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
@@ -59,7 +67,7 @@ public class HelloWorld extends AbstractHandler {
 		}
 
 		myHddImage = myFileHandler.controlImage(fileName, width, height, isScale, isGray);
-		myRamImage = ht.get(getKey(fileName, width, height, isScale, isGray));
+		myRamImage = lhm.get(getKey(fileName, width, height, isScale, isGray));
 		if (myRamImage != null) {
 			System.out.println("ramden aldiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
 			response.setHeader("Content-Type", "image/jpg");
@@ -68,7 +76,7 @@ public class HelloWorld extends AbstractHandler {
 			System.out.println("hddden aldiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
 			response.setHeader("Content-Type", "image/jpg");
 			ImageIO.write(myHddImage, "jpg", response.getOutputStream());
-			ht.put(getKey(fileName, width, height, isScale, isGray), myHddImage); // ramde
+			lhm.put(getKey(fileName, width, height, isScale, isGray), myHddImage); // ramde
 			// yoksa
 			// diskten
 			// rame
@@ -87,13 +95,13 @@ public class HelloWorld extends AbstractHandler {
 			ImageIO.write(myEditedImage, "jpg", response.getOutputStream());
 			baseRequest.setHandled(true);
 
-			ht.put(getKey(fileName, width, height, isScale, isGray), myEditedImage); // hddde
-																					// de
-																					// yoksa
-																					// webden
-																					// alıp
-																					// rame
-																					// yazdık
+			lhm.put(getKey(fileName, width, height, isScale, isGray), myEditedImage); // hddde
+																						// de
+																						// yoksa
+																						// webden
+																						// alıp
+																						// rame
+																						// yazdık
 
 			try {
 				myFileHandler.saveOriginalImage(myOriginalImage, fileName);
@@ -108,6 +116,10 @@ public class HelloWorld extends AbstractHandler {
 				e.printStackTrace();
 			}
 		}
+		/*
+		 * ArrayList<String> al = new ArrayList<>(lhm.keySet());
+		 * System.out.println(al);
+		 */ /// tryfor LHM
 	}
 
 	public static void main(String[] args) throws Exception {
